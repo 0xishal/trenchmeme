@@ -1,0 +1,12 @@
+{
+  "name": "trenchmeme",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Telegram alert bot + analyzer untuk trenching meme coin Solana (<50k mcap)",
+  "scripts": {
+    "scan": "node scripts/scan.js",
+    "check": "node scripts/check.js"
+  },
+  "engines": { "node": ">=20" }
+}

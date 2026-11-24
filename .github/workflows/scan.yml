@@ -1,0 +1,43 @@
+name: trench-scanner
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # GitHub menjalankan tiap ±5 menit (kadang telat beberapa menit)
+  workflow_dispatch: {}
+
+concurrency:
+  group: trench-scanner
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Restore state (token yang sudah dicek/di-alert)
+        uses: actions/cache/restore@v4
+        with:
+          path: .state
+          key: scan-state-${{ github.run_id }}
+          restore-keys: scan-state-
+      - name: Scan & alert
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RPC_URL: ${{ secrets.RPC_URL }}
+          MAX_MCAP: ${{ vars.MAX_MCAP }}
+          MIN_MCAP: ${{ vars.MIN_MCAP }}
+          ALERT_MIN_SCORE: ${{ vars.ALERT_MIN_SCORE }}
+          ALERT_LEVEL: ${{ vars.ALERT_LEVEL }}
+          SCAN_LOOP_SECONDS: '270'
+        run: node scripts/scan.js
+      - name: Save state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .state
+          key: scan-state-${{ github.run_id }}
