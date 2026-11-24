@@ -33,7 +33,7 @@ async function cycle(state) {
     .filter((t) => !state.alerted[t.mint])
     .filter((t) => !state.checked[t.mint] || now - state.checked[t.mint].at > RECHECK_MIN * 60e3)
     .slice(0, MAX_ANALYZE);
-  console.log(`[scan] sumber=${JSON.stringify(feed.status)} token=${feed.scanned} lolos-prefilter=${feed.passed.length} dianalisis=${todo.length}`);
+  console.log(`[scan] sumber=${JSON.stringify(feed.status)} token=${feed.scanned} harga=${feed.priced} lolos-prefilter=${feed.passed.length} dianalisis=${todo.length}`);
   for (const t of todo) {
     try {
       const r = await analyzeToken(t.mint);
