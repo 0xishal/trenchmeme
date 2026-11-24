@@ -102,6 +102,9 @@ function render(r) {
   ${r.holders.list ? `<div class="card"><b>Top holder</b><table><tr><th>#</th><th>Wallet</th><th>%</th><th>Label</th></tr>
     ${r.holders.list.map((h, i) => `<tr><td>${i+1}</td><td><a target="_blank" href="https://solscan.io/account/${h.owner}">${h.owner.slice(0,6)}…${h.owner.slice(-4)}</a></td><td>${h.pct.toFixed(2)}</td><td class="dim">${esc(h.label)}</td></tr>`).join('')}
   </table></div>` : ''}
+  ${r.smartMoney?.hits?.length ? `<div class="card"><b>👑 KOL & Smart Money</b> <span class="dim">(${r.smartMoney.holding} pegang · ${r.smartMoney.sold} jual · dicek ${r.smartMoney.checked} wallet)</span><table><tr><th>Nama</th><th>Tipe</th><th>Status</th><th></th></tr>
+    ${r.smartMoney.hits.map((h) => `<tr><td>${h.twitter ? `<a target="_blank" href="${esc(h.twitter)}">${esc(h.name || h.address.slice(0,6))}</a>` : esc(h.name || h.address.slice(0,6)+'…')}</td><td class="dim">${esc(h.type)}</td><td class="${h.status==='holding'?'good':'warn'}">${h.status==='holding' ? 'pegang '+h.pct.toFixed(2)+'%' : 'sudah jual'}</td><td><a target="_blank" href="https://gmgn.ai/sol/address/${h.address}">GMGN</a></td></tr>`).join('')}
+  </table></div>` : ''}
   ${L && !L.incomplete && L.bundleList?.length ? `<div class="card"><b>Wallet bundle (blok 0)</b><table>
     ${L.bundleList.map((b) => `<tr><td><a target="_blank" href="https://solscan.io/account/${b.wallet}">${b.wallet.slice(0,6)}…${b.wallet.slice(-4)}</a></td><td>beli ${b.pct.toFixed(2)}%</td></tr>`).join('')}
   </table></div>` : ''}

@@ -29,8 +29,27 @@ Sumber data (semua gratis, Solana mainnet): Solana RPC, RugCheck, DexScreener, p
 | `ALERT_MIN_SCORE` | 75 | Skor minimal untuk alert |
 | `ALERT_LEVEL` | buy | `caution` = ikut kirim alert 🟡 |
 | `ACCESS_KEY` | – | Kunci untuk halaman web & `/api/analyze` |
+| `KOL_ALERT_MIN` | 2 | Alert jika ≥N KOL/smart wallet pegang (0 = mati) |
+| `WATCHLIST_SOURCES` | kol-quest | URL daftar wallet (koma) atau `none` |
+| `EXTRA_WALLETS` | – | `addr:Nama,addr:Nama` tambahan |
 
 (`MAX_MCAP`, `MIN_MCAP`, `ALERT_*` di GitHub diisi sebagai **Variables**, bukan Secrets.)
+
+---
+
+## 👑 KOL & smart wallet
+
+Setiap analisis mengecek **±900 wallet** (KOL bernama + smart money + bot sniper terkenal) apakah sudah membeli token tersebut:
+- **Sumber publik** (dimuat saat runtime, di-cache 6 jam): leaderboard KolScan dan label KOL/smart money GMGN, dari dataset publik [nirholas/kol-quest](https://github.com/nirholas/kol-quest). Data tidak disalin ke repo ini. Ganti/matikan lewat env `WATCHLIST_SOURCES` (URL dipisah koma, atau `none`).
+- **Daftar pribadi**: edit `data/wallets.json` (prioritas tertinggi), contoh:
+  ```json
+  { "wallets": [ { "address": "WALLET_ADDRESS", "name": "Nama KOL", "type": "kol", "twitter": "handle" } ] }
+  ```
+  atau env `EXTRA_WALLETS="addr1:Nama1,addr2:Nama2"`.
+- Cara cek: alamat token account (ATA) tiap wallet dihitung lalu dibaca sekaligus via RPC (±10 panggilan). **pegang** = saldo > 0, **sudah jual** = akun ada tapi saldo 0, atau wallet itu tercatat beli di blok awal.
+- Scanner mengirim **👑 KOL ALERT** kalau ≥`KOL_ALERT_MIN` (default 2) KOL/smart wallet sedang pegang, selama verdict bukan 🔴.
+
+Keterbatasan: wallet yang beli lalu menutup akunnya setelah jual (umum di bot trading) bisa tidak terdeteksi sebagai "sudah jual". KOL yang memakai wallet baru/tersembunyi tentu tidak terlihat.
 
 ---
 
@@ -55,6 +74,7 @@ Sumber data (semua gratis, Solana mainnet): Solana RPC, RugCheck, DexScreener, p
 | Dev | Holding | ≤5% | 5–10% | >10% (>20% ★) |
 | | Rekam jejak | pernah graduate (≥10%) | dev baru | ≥5 koin tanpa graduate (≥20 ★) |
 | | Umur wallet | >2 hari | fresh | – |
+| Smart money | KOL / smart wallet | ≥1 pegang & lebih banyak yang pegang daripada yang jual | lebih banyak yang sudah jual | – (tidak ada = netral) |
 | Momentum | Buy/Sell 1 jam | ≥1.1 | 0.8–1.1 | <0.8 |
 | | Volume 1 jam | ≥50% MC | 15–50% | <15% |
 | Sosial | X / TG / Web | ≥2 | 1 | tidak ada |
@@ -85,6 +105,9 @@ api/setup.js      daftarkan webhook + menu perintah
 api/analyze.js    JSON API analisis (?ca=)
 api/feed.js       kandidat token baru yang lolos prefilter
 lib/analyze.js    mesin analisis & skoring
+lib/kols.js       watchlist KOL/smart wallet + deteksi pembeli
+lib/solana.js     base58 + derivasi ATA (tanpa dependency)
+data/wallets.json watchlist pribadi
 lib/feed.js       sumber token baru (DexScreener, GeckoTerminal, pump.fun)
 lib/telegram.js   format pesan Telegram
 scripts/scan.js   scanner + alert (GitHub Actions)

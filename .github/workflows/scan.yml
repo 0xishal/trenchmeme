@@ -33,6 +33,7 @@ jobs:
           MIN_MCAP: ${{ vars.MIN_MCAP }}
           ALERT_MIN_SCORE: ${{ vars.ALERT_MIN_SCORE }}
           ALERT_LEVEL: ${{ vars.ALERT_LEVEL }}
+          KOL_ALERT_MIN: ${{ vars.KOL_ALERT_MIN }}
           SCAN_LOOP_SECONDS: '270'
         run: node scripts/scan.js
       - name: Save state

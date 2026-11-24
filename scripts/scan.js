@@ -15,6 +15,7 @@ const RECHECK_MIN = num(process.env.RECHECK_MIN) ?? 20;
 const ALERT_MIN_SCORE = num(process.env.ALERT_MIN_SCORE) ?? 75;
 const ALERT_LEVEL = process.env.ALERT_LEVEL || 'buy'; // 'buy' atau 'caution' (ikut kirim 🟡)
 let DRY = process.env.DRY_RUN === '1';
+const KOL_ALERT_MIN = num(process.env.KOL_ALERT_MIN) ?? 2; // alert juga kalau ≥N KOL/smart wallet pegang (selama bukan 🔴)
 
 function load() {
   try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')); } catch { return { checked: {}, alerted: {} }; }
@@ -40,10 +41,13 @@ async function cycle(state) {
       state.checked[t.mint] = { at: Date.now(), score: r.score, level: r.verdict.level };
       console.log(`  ${r.verdict.emoji} ${r.token.symbol.padEnd(10)} skor=${r.score} mc=$${Math.round(r.market.mcap || 0)} ${r.verdict.reason}`);
       const ok = r.score >= ALERT_MIN_SCORE && (r.verdict.level === 'buy' || (ALERT_LEVEL === 'caution' && r.verdict.level === 'caution'));
-      if (ok) {
+      const kolHold = r.smartMoney?.holding || 0;
+      const kolOk = KOL_ALERT_MIN > 0 && kolHold >= KOL_ALERT_MIN && r.verdict.level !== 'avoid';
+      if (kolHold) console.log(`     👑 ${kolHold} KOL/smart pegang: ${r.smartMoney.hits.filter((h) => h.status === 'holding').slice(0, 5).map((h) => h.name || h.address.slice(0, 6)).join(', ')}`);
+      if (ok || kolOk) {
         state.alerted[t.mint] = { at: Date.now(), score: r.score };
         if (!DRY) for (const chat of allowedChats())
-          await tg('sendMessage', { chat_id: chat, text: formatReport(r, { alert: true }), parse_mode: 'HTML', reply_markup: keyboard(r), disable_web_page_preview: true });
+          await tg('sendMessage', { chat_id: chat, text: formatReport(r, { alert: ok ? 'filter' : 'kol' }), parse_mode: 'HTML', reply_markup: keyboard(r), disable_web_page_preview: true });
       }
     } catch (e) {
       state.checked[t.mint] = { at: Date.now(), error: String(e.message || e) };

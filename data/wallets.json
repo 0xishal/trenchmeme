@@ -1,0 +1,4 @@
+{
+  "_info": "Watchlist pribadi kamu. Tambahkan wallet KOL / smart money / teman di 'wallets'. type: kol | smart | whale | custom. Contoh entri ada di README. Daftar ini digabung dengan sumber publik (WATCHLIST_SOURCES) dan diprioritaskan.",
+  "wallets": []
+}
